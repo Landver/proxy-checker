@@ -11,12 +11,12 @@ const proxyChecker = {
         console.log('Starting proxy-checker..');
 
         browser = await puppeteer.launch({
-            headless: false,
+            // headless: false,
             args: [`--proxy-server=${protocol}://${address}:${port}`]
         });
         page = await browser.newPage();
 
-        // ** Do not download images */
+        // ** Do not download images and fonts */
         await page.setRequestInterception(true);
         page.on('request', req => {
             if (['image', 'font'].includes(req.resourceType())) { req.abort(); }
@@ -34,18 +34,18 @@ const proxyChecker = {
         const downloadSpeedResult = 'span[class="result-data-large number result-data-value download-speed"]';
         const uploadSpeedResult = 'span[class="result-data-large number result-data-value upload-speed"]';
 
-        /** Go to speed test page via proxy */
+        /** Go to speed test page */
         try { await page.goto("https://www.speedtest.net/", { timeout: 10000 }) } 
         catch (err) {
             console.log(`10 sec had passed since initial page load attempt`);
             if (err.message.includes('ERR_PROXY_CONNECTION_FAILED') || err.message.includes('ERR_CONNECTION_RESET')) { return }
-        }
+        };
 
         /** Close popup cookies warning banner */
         try {
             await page.waitFor(cookiesAcceptButton, { timeout: 4000 }); await page.click(cookiesAcceptButton, { delay: 25 });
             await page.waitFor(1000)
-        } catch (err) { console.log('was no request to accept cookies') }
+        } catch (err) { console.log('was no request to accept cookies') };
 
         /** Click on "Go" button to start speed test */
         try {
@@ -55,14 +55,14 @@ const proxyChecker = {
         catch (err) {
             console.log(err);
             return
-        }
+        };
 
         /** Wait 60 seconds to let speed test finish it's job */
         try { await page.waitFor(goAgainButton, { timeout: 60000 }); }
         catch (err) {
             console.log(err);
             return
-        }
+        };
 
         /** Get result values of maxumum download and upload speed */
         try {
@@ -70,8 +70,6 @@ const proxyChecker = {
             const uploadSpeed = await page.$eval(uploadSpeedResult, el => el.innerText);
             console.log(`download: ${downloadSpeed}, upload: ${uploadSpeed}`)
         } catch (err) { console.log(err.message) }
-
-        debugger;
     },
 
     /** close the browser */
